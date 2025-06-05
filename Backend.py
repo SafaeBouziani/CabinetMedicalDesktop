@@ -1,0 +1,80 @@
+# Backend.py
+from models import User, Patient, Doctor, Admin, Consultation
+from werkzeug.security import generate_password_hash, check_password_hash
+from bson import ObjectId
+
+class Database:
+    def __init__(self, mongodb):
+        self.mongodb = mongodb
+    def add_user(self, user_data, role):
+        # Generate a shared _id
+        shared_id = ObjectId()
+        user_data["_id"] = shared_id  # Apply same _id across all
+
+        if role == "patient":
+            if "age" not in user_data:
+                raise ValueError("L'âge est requis pour un patient")
+            user = Patient(**user_data)
+            patient_data = user.to_dict()
+            patient_data["_id"] = shared_id
+            patient_data["password"] = generate_password_hash(patient_data["password"])
+            self.mongodb.patients.insert_one(patient_data)
+        elif role == "doctor":
+            user = Doctor(**user_data)
+            doctor_data = user.to_dict()
+            doctor_data["_id"] = shared_id
+            doctor_data["password"] = generate_password_hash(doctor_data["password"])
+            self.mongodb.doctors.insert_one(doctor_data)
+        elif role == "admin":
+            user = Admin(**user_data)
+        else:
+            raise ValueError("Rôle invalide")
+
+        user_data = user.to_dict()
+        user_data["_id"] = shared_id
+        user_data["password"] = generate_password_hash(user_data["password"])
+        result = self.mongodb.users.insert_one(user_data)
+
+        return str(shared_id)
+
+    def get_user_by_role(self, role):
+        return list(self.mongodb.users.find({"role": role}))
+
+    def get_all_users(self):
+        return list(self.mongodb.users.find())
+
+
+    def update_user(self, user_id, new_data):
+        user = self.mongodb.users.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise ValueError("Utilisateur introuvable")
+
+        if "password" in new_data:
+            new_data["password"] = generate_password_hash(new_data["password"])
+
+        role = user.get("role")
+
+        if role == "patient":
+            self.mongodb.patients.update_one({"_id": ObjectId(user_id)}, {"$set": new_data})
+        elif role == "doctor":
+            self.mongodb.doctors.update_one({"_id": ObjectId(user_id)}, {"$set": new_data})
+
+
+        self.mongodb.users.update_one({"_id": ObjectId(user_id)}, {"$set": new_data})
+
+
+    def delete_user(self, user_id):
+        user = self.mongodb.users.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise ValueError("Utilisateur introuvable")
+
+        role = user.get("role")
+
+
+        if role == "patient":
+            self.mongodb.patients.delete_one({"_id": ObjectId(user_id)})
+        elif role == "doctor":
+            self.mongodb.doctors.delete_one({"_id": ObjectId(user_id)})
+
+
+        self.mongodb.users.delete_one({"_id": ObjectId(user_id)})

@@ -10,11 +10,11 @@ neo4j = None  # Si vous utilisez Neo4j, initialisez-le ici
 auth_manager = AuthManager(mongodb, neo4j)
 
 user_data = {
-    "username": "testadmin",
+    "username": "Patient",
     "password": "votre_mot_de_passe",  # sera hashé automatiquement
-    "role": "admin",
-    "email": "admin@example.com",
-    "name": "Admin Test"
+    "role": "patient",
+    "email": "patient@example.com",
+    "name": "Patient"
 }
 
 # Utiliser l'instance pour appeler add_user

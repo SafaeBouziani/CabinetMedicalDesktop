@@ -1,21 +1,24 @@
-# Créer un nouvel utilisateur admin correctement
+# Créer un nouveau patient dans la base de données
 from auth.AuthManager import AuthManager
-from database import MongoDBConnector  # Assurez-vous d'importer votre classe de base de données
+from database import MongoDBConnector  # Assurez-vous que cette classe est bien configurée
+from database.Neo4jConnectionManager import Neo4jConnector  # Si vous utilisez Neo4j
 
-# Créer une instance de la base de données
-mongodb = MongoDBConnector()  # Ajustez selon votre configuration
-neo4j = None  # Si vous utilisez Neo4j, initialisez-le ici
-
-# Créer une instance de AuthManager
+# Initialisation des connecteurs
+mongodb = MongoDBConnector()  # Adapter si besoin
+neo4j = None  # Adapter si besoin
+# Création de l'AuthManager
 auth_manager = AuthManager(mongodb, neo4j)
 
-user_data = {
-    "username": "testadmin",
-    "password": "votre_mot_de_passe",  # sera hashé automatiquement
+# Données du patient avec le rôle précisé
+patient_data = {
+    "username": "hakim",
+    "password": "123",
+    "email": "fati@gmail.com",
     "role": "admin",
-    "email": "admin@example.com",
-    "name": "Admin Test"
+    "name": "fatima zahra",
+    "age": 22
+    
 }
 
-# Utiliser l'instance pour appeler add_user
-auth_manager.add_user(user_data)
+# Ajouter le patient à la base de données
+auth_manager.add_user(patient_data)

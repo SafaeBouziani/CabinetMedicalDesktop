@@ -9,8 +9,7 @@ class MongoDBConnector:
         try:
             self.client = MongoClient(
                 Config.MONGODB_URI,
-                serverSelectionTimeoutMS=5000
-            )
+                tls=True)
             self.db = self.client[Config.DB_NAME]
             self.users = self.db["users"]
             self.patients = self.db["patients"]

@@ -1,4 +1,3 @@
-# models/patient.py
 from .UserModel import User
 
 class Patient(User):
@@ -7,7 +6,6 @@ class Patient(User):
         super().__init__(username, password, email, role="patient", **kwargs)
         self.name = name
         self.age = age
-        self.medical_history = kwargs.get('medical_history', [])
         self.consultations = []  # Liste des consultations du patient
 
     def to_dict(self):
@@ -15,6 +13,6 @@ class Patient(User):
         base_dict.update({
             "name": self.name,
             "age": self.age,
-            "medical_history": self.medical_history
+            "consultations": self.consultations
         })
         return base_dict

@@ -36,3 +36,29 @@ class DatabaseSyncManager:
                 MATCH (u:User {mongo_id: $id})
                 DETACH DELETE u
             """, id=str(user_id))
+    def sync_consultations(self):
+        """Sync consultations from MongoDB to Neo4j as relationships with properties"""
+        consultations = self.mongodb.consultations.find()
+
+        for consultation in consultations:
+            try:
+                patient_id = str(consultation["patient_id"])
+                doctor_id = str(consultation["doctor_id"])
+                motif = consultation.get("motif", "")
+                date = consultation.get("date", None)
+                time = consultation.get("time", None)
+
+                with self.neo4j.driver.session() as session:
+                    session.run("""
+                        MATCH (p:User {mongo_id: $patient_id, role: 'patient'})
+                        MATCH (d:User {mongo_id: $doctor_id, role: 'doctor'})
+                        MERGE (p)-[c:CONSULTED_WITH {date: $date, time: $time}]->(d)
+                        SET c.motif = $motif
+                    """, 
+                    patient_id=patient_id,
+                    doctor_id=doctor_id,
+                    motif=motif,
+                    date=date,
+                    time=time)
+            except Exception as e:
+                print(f"Erreur lors de la synchronisation d'une consultation : {e}")

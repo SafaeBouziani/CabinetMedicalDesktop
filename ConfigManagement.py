@@ -2,7 +2,7 @@
 
 class Config:
     # MongoDB configuration
-    MONGODB_URI = "mongodb+srv://user1:safae2004@cluster0.dnu3pdi.mongodb.net/"
+    MONGODB_URI = "mongodb+srv://fzboujrad:boujrad2003@cluster0.dnu3pdi.mongodb.net/mydatabase?retryWrites=true&w=majority&appName=Cluster0"
     DB_NAME = "mydatabase"
 
     # Neo4j configuration (à remplacer par vos identifiants)

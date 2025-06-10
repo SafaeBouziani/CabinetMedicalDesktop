@@ -6,8 +6,6 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QFont, QIcon
 from PySide6.QtCore import Qt
 from datetime import datetime
-import traceback
-from neo4j_consultation_service import ConsultationService  # Assuming this is the correct import path for your service
 
 class PatientView(QWidget):
     def __init__(self, main_window):
@@ -70,12 +68,12 @@ class PatientView(QWidget):
         main_layout.setSpacing(20)
 
         # Title
-        self.title = QLabel("👨‍⚕️ Dashboard Patient ")
+        self.title = QLabel("👨‍⚕️ Patient Dashboard")
         self.title.setObjectName("Header")
         main_layout.addWidget(self.title)
 
         # Patient Info Box
-        info_box = QGroupBox("Informations Patient ")
+        info_box = QGroupBox("Patient Information")
         info_layout = QVBoxLayout()
         self.info_label = QLabel("Loading...")
         self.info_label.setFont(QFont("Arial", 13))
@@ -84,13 +82,13 @@ class PatientView(QWidget):
         main_layout.addWidget(info_box)
 
         # Consultations Table
-        table_box = QGroupBox("Consultations ")
+        table_box = QGroupBox("Consultation History")
         table_layout = QVBoxLayout()
 
         self.consultations_table = QTableWidget()
         self.consultations_table.setColumnCount(5)
         self.consultations_table.setHorizontalHeaderLabels(
-            ["Date", "Heure", "Docteur", "Motif", "Status"]
+            ["Date", "Time", "Doctor", "Reason", "Status"]
         )
         self.consultations_table.horizontalHeader().setStretchLastSection(True)
         self.consultations_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -103,60 +101,32 @@ class PatientView(QWidget):
 
     def load_data(self, user_data):
         self.user_data = user_data
-        self.info_label.setText(f"<b>Name:</b> {user_data['name']}<br><b>ID:</b> {user_data['_id']}")
+        self.info_label.setText(f"<b>Name:</b> {user_data['name']}<br><b>ID:</b> {user_data['user_id']}")
         self.load_consultations()
 
-    
     def load_consultations(self):
-        try:
-            user_id = str(self.user_data["_id"])
-            user_name = self.user_data.get("name", "Nom inconnu")
-            print(f"[DEBUG] Loading consultations for user_id = {user_id}, name = {user_name}")
-            
-            service = ConsultationService(self.main_window.database.mongodb)
-            consultations = service.get_consultations(user_id)
+        consultations = self.main_window.mongodb.get_patient_consultations(
+            self.user_data['user_id']
+        )
+        self.update_consultations_table(consultations)
 
-            # Inject current user's name in case it's needed
-            for c in consultations:
-                if "patient" not in c:
-                    c["patient"] = user_name
-
-            print(f"[DEBUG] Retrieved consultations: {consultations}")
-            self.update_consultations_table(consultations)
-        except Exception as e:
-            print(f"[ERROR] Erreur lors du chargement des consultations : {e}")
-            traceback.print_exc()
-            
     def update_consultations_table(self, consultations):
         self.consultations_table.setRowCount(len(consultations))
-
         for row, consultation in enumerate(consultations):
-            # 1. Parse date safely
-            date_value = consultation["date"]
-            if isinstance(date_value, str):
-                try:
-                    date = datetime.fromisoformat(date_value)
-                except ValueError:
-                    print(f"[WARN] Invalid date format: {date_value}")
-                    date = datetime.now()
-            else:
-                date = date_value.to_native() if hasattr(date_value, 'to_native') else date_value
+            date = consultation["date"]
 
-            # 2. Set each column
-            self.consultations_table.setItem(row, 0, QTableWidgetItem(date.strftime("%Y-%m-%d")))  # Date
-            self.consultations_table.setItem(row, 1, QTableWidgetItem(date.strftime("%H:%M")))     # Heure
-            self.consultations_table.setItem(row, 2, QTableWidgetItem(consultation.get("doctor", "N/A")))  # Docteur
-            self.consultations_table.setItem(row, 3, QTableWidgetItem(consultation.get("motif", "—")))      # Motif
+            self.consultations_table.setItem(row, 0, QTableWidgetItem(date.strftime("%Y-%m-%d")))
+            self.consultations_table.setItem(row, 1, QTableWidgetItem(date.strftime("%H:%M")))
+            self.consultations_table.setItem(row, 2, QTableWidgetItem(consultation["doctor"]))
+            self.consultations_table.setItem(row, 3, QTableWidgetItem(consultation["motif"]))
 
-            # 3. Status with color coding
-            status_text = consultation.get("status", "Inconnu").lower()
-            status_item = QTableWidgetItem(status_text.capitalize())
-
-            if "complet" in status_text:
+            # Color-code status
+            status_item = QTableWidgetItem(consultation["status"])
+            status = consultation["status"].lower()
+            if "completed" in status:
                 status_item.setBackground(Qt.green)
-            elif "programmé" in status_text or "schedul" in status_text:
+            elif "scheduled" in status:
                 status_item.setBackground(Qt.yellow)
-            elif "annul" in status_text or "cancel" in status_text:
+            elif "canceled" in status:
                 status_item.setBackground(Qt.red)
-
-            self.consultations_table.setItem(row, 4, status_item)  # Status
+            self.consultations_table.setItem(row, 4, status_item)

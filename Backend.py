@@ -78,3 +78,37 @@ class Database:
 
 
         self.mongodb.users.delete_one({"_id": ObjectId(user_id)})
+    def get_user_consultations(self, user_id):
+        user = self.mongodb.users.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise ValueError("Utilisateur introuvable")
+
+        role = user.get("role")
+        
+        if role == "patient":
+            return list(self.mongodb.consultations.find({"patient_id": str(user_id)}))
+        elif role == "doctor":
+            return list(self.mongodb.consultations.find({"doctor_id": str(user_id)}))
+        elif role == "admin":
+            return list(self.mongodb.consultations.find())  # or return [] if admins don't need this
+        else:
+            raise ValueError("Rôle utilisateur non reconnu")
+    def get_patient_consultations2(self, mongo_id):
+        query = """
+        MATCH (p:User {mongo_id: $mongo_id, role: 'patient'})-[c:CONSULTED_WITH]->(d:User {role: 'doctor'})
+        RETURN 
+            c.motif AS motif,
+            c.date AS date,
+            c.status AS status,
+            c.diagnostic AS diagnostic,
+            c.prescriptions AS prescriptions,
+            d.name AS doctor
+        ORDER BY c.date DESC
+        """
+        try:
+            with self.driver.session() as session:
+                result = session.run(query, mongo_id=mongo_id)
+                return [record.data() for record in result]
+        except Exception as e:
+            print(f"Erreur lors de la récupération des consultations pour le patient {mongo_id} : {e}")
+            return []

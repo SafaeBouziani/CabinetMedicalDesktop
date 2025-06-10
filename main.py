@@ -13,10 +13,7 @@ def main():
         mongodb = MongoDBConnector()
         neo4j = Neo4jConnector()
         
-        if not mongodb.client or not neo4j.driver:
-            print("Erreur de connexion aux bases de données")
-            return 1
-            
+           
         sync_manager = DatabaseSyncManager(mongodb, neo4j)
         auth_manager = AuthManager(mongodb, neo4j)
         database = Database(mongodb)

@@ -42,18 +42,25 @@ class MainWindow(QMainWindow):
         login_dialog = LoginDialog(self.auth_manager)
         if login_dialog.exec_():
             self.user_data = login_dialog.user_data
+            print("User data received:", self.user_data)
             self.show_appropriate_view()
         else:
             self.close()
 
     def show_appropriate_view(self):
-        role = self.user_data['role']
-        if role == 'patient':
-            self.stacked_widget.setCurrentWidget(self.patient_view)
-            self.patient_view.load_data(self.user_data)
-        elif role == 'doctor':
-            self.stacked_widget.setCurrentWidget(self.doctor_view)
-            self.doctor_view.load_data(self.user_data)
-        elif role == 'admin':
-            self.stacked_widget.setCurrentWidget(self.admin_view)
-            self.admin_view.load_data(self.user_data)
+        try:
+            role = self.user_data['role']
+            if role == 'patient':
+                self.stacked_widget.setCurrentWidget(self.patient_view)
+                self.patient_view.load_data(self.user_data)
+            elif role == 'doctor':
+                self.stacked_widget.setCurrentWidget(self.doctor_view)
+                self.doctor_view.load_data(self.user_data)
+            elif role == 'admin':
+                self.stacked_widget.setCurrentWidget(self.admin_view)
+                self.admin_view.load_data(self.user_data)
+            else:
+                raise ValueError(f"Unknown role: {role}")
+        except Exception as e:
+            QMessageBox.critical(self, "Erreur", f"Erreur de redirection: {e}")
+            self.close()

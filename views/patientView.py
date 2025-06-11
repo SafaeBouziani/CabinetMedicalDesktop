@@ -1,3 +1,4 @@
+'''
 # views/patient_view.py
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem,
@@ -130,3 +131,4 @@ class PatientView(QWidget):
             elif "canceled" in status:
                 status_item.setBackground(Qt.red)
             self.consultations_table.setItem(row, 4, status_item)
+'''

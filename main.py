@@ -3,7 +3,6 @@ from database import MongoDBConnector, Neo4jConnector, DatabaseSyncManager
 from auth import AuthManager
 from views import MainWindow
 from Backend import Database
-
 import sys
 
 def main():

@@ -9,15 +9,12 @@ neo4j = None  # Adapter si besoin
 # Création de l'AuthManager
 auth_manager = AuthManager(mongodb, neo4j)
 
-# Données du patient avec le rôle précisé
-patient_data = {
-    "username": "hakim",
-    "password": "123",
-    "email": "fati@gmail.com",
-    "role": "admin",
-    "name": "fatima zahra",
-    "age": 22
-    
+user_data = {
+    "username": "Patient",
+    "password": "votre_mot_de_passe",  # sera hashé automatiquement
+    "role": "patient",
+    "email": "patient@example.com",
+    "name": "Patient"
 }
 
 # Ajouter le patient à la base de données
